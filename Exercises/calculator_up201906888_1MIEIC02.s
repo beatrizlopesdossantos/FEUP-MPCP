@@ -1,0 +1,61 @@
+.global power
+.text
+.global Calculator
+.type Calculator,"function"
+
+Calculator:	STP X29, X30, [SP, -16]!
+			MOV X29, SP
+			MOV W19, W0
+			MOV X20, X1
+			MOV X21, X2
+			MOV X22, X3
+			MOV X23, #0
+
+CICLO:		CBZ W19, FIM
+			ADD X23, X23, #1
+			LDRB W24, [X20]
+			LDRSW X25, [X21]
+			LDRSW X26, [X22]
+			CMP X24, #43
+			B.EQ SOMA
+			CMP X24, #45
+			B.EQ SUBTRACAO
+			CMP X24, #42
+			B.EQ MULTI
+			MOV X0, X26
+			MOV X1, X25
+			BL power
+			MOV X27, X0
+			CBZ X27, OVERFLOW
+			B NEXT
+
+SOMA:		ADDS W27, W25, W26
+			B.VS OVERFLOW
+			B NEXT
+
+SUBTRACAO:  SUBS W27, W26, W25
+			B.VS OVERFLOW
+			B NEXT
+
+MULTI:		SMULL X27, W26, W25
+			ASR X28, X27, 31
+			CBZ X28, NEXT
+			CMP X28, #-1
+			B.EQ NEXT
+			B OVERFLOW
+
+NEXT:		STR W27, [X22]
+			ADD X20, X20, #1
+			ADD X21, X21, #4
+			ADD X22, X22, #4
+			SUB X19, X19, #1
+            B CICLO
+
+OVERFLOW: 	MOV X0, X23
+			B FIM2
+
+FIM: 		MOV X2, X22
+			MOV X0, #0
+
+FIM2:		LDP X29, X30, [SP], 16
+			RET
